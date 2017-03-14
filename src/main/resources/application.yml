@@ -17,7 +17,8 @@ datasource:
     defaultSchema:
     maxPoolSize: 10
     hibernate:
-      hbm2ddl.method: create-drop
+      hbm2ddl.method:
+#      hbm2ddl.method: create-drop
       show_sql: true
       format_sql: true
       dialect: org.hibernate.dialect.H2Dialect

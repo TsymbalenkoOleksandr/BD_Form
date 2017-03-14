@@ -1,115 +1,89 @@
-'use strict';
+/**
+ * Created by Oleksandr on 06.03.2017.
+ */
+angular.
+module('crudApp').
+controller('mainController', ['$scope', '$http', 'getRequest',
+    function ($scope, $http, getRequest) {
+        that = this;
+        that.user = {};
 
-angular.module('crudApp').controller('UserController',
-    ['UserService', '$scope', function (UserService, $scope) {
+        getRequest.success(function(data) {
+            that.allUsers = data;
+        });
 
-        var self = this;
-        self.user = {};
-        self.users = [];
-
-        self.submit = submit;
-        self.getAllUsers = getAllUsers;
-        self.createUser = createUser;
-        self.updateUser = updateUser;
-        self.removeUser = removeUser;
-        self.editUser = editUser;
-        self.reset = reset;
-
-        self.successMessage = '';
-        self.errorMessage = '';
-        self.done = false;
-
-        self.onlyIntegers = /^\d+$/;
-        self.onlyNumbers = /^\d+([,.]\d+)?$/;
-
-        function submit() {
-            console.log('Submitting');
-            if (self.user.id === undefined || self.user.id === null) {
-                console.log('Saving New User', self.user);
-                createUser(self.user);
-            } else {
-                updateUser(self.user, self.user.id);
-                console.log('User updated with id ', self.user.id);
-            }
-        }
-
-        function createUser(user) {
-            console.log('About to create user');
-            UserService.createUser(user)
-                .then(
-                    function (response) {
-                        console.log('User created successfully');
-                        self.successMessage = 'User created successfully';
-                        self.errorMessage = '';
-                        self.done = true;
-                        self.user = {};
-                        $scope.myForm.$setPristine();
-                    },
-                    function (errResponse) {
-                        console.error('Error while creating User');
-                        self.errorMessage = 'Error while creating User: ' + errResponse.data.errorMessage;
-                        self.successMessage = '';
-                    }
-                );
-        }
-
-
-        function updateUser(user, id) {
-            console.log('About to update user');
-            UserService.updateUser(user, id)
-                .then(
-                    function (response) {
-                        console.log('User updated successfully');
-                        self.successMessage = 'User updated successfully';
-                        self.errorMessage = '';
-                        self.done = true;
-                        $scope.myForm.$setPristine();
-                    },
-                    function (errResponse) {
-                        console.error('Error while updating User');
-                        self.errorMessage = 'Error while updating User ' + errResponse.data;
-                        self.successMessage = '';
-                    }
-                );
-        }
-
-
-        function removeUser(id) {
-            console.log('About to remove User with id ' + id);
-            UserService.removeUser(id)
-                .then(
-                    function () {
-                        console.log('User ' + id + ' removed successfully');
-                    },
-                    function (errResponse) {
-                        console.error('Error while removing user ' + id + ', Error :' + errResponse.data);
-                    }
-                );
-        }
-
-
-        function getAllUsers() {
-            return UserService.getAllUsers();
-        }
-
-        function editUser(id) {
-            self.successMessage = '';
-            self.errorMessage = '';
-            UserService.getUser(id).then(
-                function (user) {
-                    self.user = user;
-                },
-                function (errResponse) {
-                    console.error('Error while removing user ' + id + ', Error :' + errResponse.data);
+        that.submit = function() {
+            var url =  '/SpringBootCRUDApp/api/user/';
+            var data = {
+                name: that.user.name,
+                age: that.user.age,
+                salary: that.user.salary
+            };
+            var config = {
+                headers: {
+                    'Content-Type': 'application/json'
                 }
-            );
-        }
+            };
+            $http.post(url, data, config).
+                success(function (data, status) {
+                    that.successMessage = 'You added to DB';
+                    that.errorMessage = '';
+                    that.user.id = false;
+                    $http.get('/SpringBootCRUDApp/api/user/').success(function(data) {
+                        that.allUsers = data;
+                    });
+                }).
+                error(function (data, status) {
+                    that.errorMessage = data.errorMessage;
+                    that.successMessage = '';
+                    if(status == 409)
+                        that.user.id = true;
+                    else if(status == 400) {
+                        that.errorMessage = 'The input field should have appropriate type';
+                    }
+                });
+        };
 
-        function reset() {
-            self.successMessage = '';
-            self.errorMessage = '';
-            self.user = {};
-            $scope.myForm.$setPristine(); //reset Form
+        that.getAllUsers = function() {
+            return that.allUsers;
+        };
+
+        that.removeUser = function(user_id) {
+            var url =  '/SpringBootCRUDApp/api/user/'+user_id;
+            var data = {id: user_id};
+            $http.delete(url, data).
+            success(function (data, status) {
+                $http.get('/SpringBootCRUDApp/api/user/').success(function(data) {
+                    that.allUsers = data;
+                });
+                console.log('asdfsa', data, status);
+            });
+        };
+
+        that.reset = function() {
+            that.user.name = '';
+            that.user.age = '';
+            that.user.salary = '';
+        };
+
+        that.editUser = function(user_id) {
+            var url =  '/SpringBootCRUDApp/api/user/'+user_id;
+            var data = {
+                id: user_id,
+                name: that.user.name,
+                age: that.user.age,
+                salary: that.user.salary
+            };
+            $http.put(url, data).
+            success(function (data, status) {
+                $http.get('/SpringBootCRUDApp/api/user/').success(function(data) {
+                    that.allUsers = data;
+                });
+                console.log('woav', data, status);
+            });
+            $http.get('/SpringBootCRUDApp/api/user/').success(function(data) {
+                that.allUsers = data;
+            });
         }
     }
-    ]);
+])

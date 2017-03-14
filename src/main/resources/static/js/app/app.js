@@ -1,27 +1,22 @@
-var app = angular.module('crudApp', ['ui.router', 'ngStorage']);
+/**
+ * Created by Oleksandr on 06.03.2017.
+ */
+'use strict';
 
-app.constant('urls', {
-    BASE: 'http://localhost:8080/SpringBootCRUDApp',
-    USER_SERVICE_API: 'http://localhost:8080/SpringBootCRUDApp/api/user/'
-});
-
-app.config(['$stateProvider', '$urlRouterProvider',
-    function ($stateProvider, $urlRouterProvider) {
+angular
+    .module('crudApp', ['ui.router', 'service'])
+    .config(function($stateProvider, $urlRouterProvider) {
 
         $stateProvider
+
             .state('home', {
-                url: '/',
-                templateUrl: 'partials/list',
-                controller: 'UserController',
-                controllerAs: 'ctrl',
-                resolve: {
-                    users: function ($q, UserService) {
-                        console.log('Load all users');
-                        var deferred = $q.defer();
-                        UserService.loadAllUsers().then(deferred.resolve, deferred.resolve);
-                        return deferred.promise;
-                    }
-                }
+                url: '/home',
+                templateUrl: 'templates/list.ftl',
+                controller : 'mainController',
+                controllerAs: 'ctrl'
             });
+
         $urlRouterProvider.otherwise('/');
-    }]);
+
+
+    });
